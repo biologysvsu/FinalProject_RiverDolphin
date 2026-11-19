@@ -585,11 +585,15 @@ We will use these questions to evaluate our results and determine whether the ge
 
 **Note:** The analysis has not yet been performed, so no conclusions can be made at this time.
 
+
 ## Project Status
 
-This repository currently documents the proposed bioinformatics workflow.
+This repository contains our proposed bioinformatics workflow for comparing whole-genome sequencing data from Amazon river dolphin, arapaima, and human.
 
-The scripts have been prepared but have not yet been executed on PSC Bridges2.
+We have identified nine SRA accessions and prepared the commands and SLURM scripts needed to download the sequencing data, align the reads to the human reference genome, identify genetic variants, and perform principal component analysis (PCA).
 
-The software environment, dataset metadata, resource requirements, and input file layouts must be verified before running the analysis.
+Unfortunately, we were unable to run the analysis because the PSC Bridges2 high-performance computing system is currently unavailable due to relocation. Because of this, our group focused on creating a detailed tutorial and preparing the scripts so the analysis can be completed once the system becomes available again.
 
+The expected outputs include FASTQ files, BAM alignment files, VCF files, variant statistics, and PCA results. However, these files have not yet been generated, and the scripts have not been tested on PSC Bridges2.
+
+Although we could not complete the computational analysis, our GitHub repository provides the steps, commands, and scripts needed to carry out the project in the future.
