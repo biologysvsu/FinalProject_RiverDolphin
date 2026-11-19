@@ -88,11 +88,48 @@ Before downloading, the NCBI metadata should be checked to confirm that each run
 
 ## Step 2: Download SRA Sequences
 
-In this step, we will create a script to download the nine sequencing datasets from NCBI using the SRA Toolkit.
+The next step is to download the nine whole-genome sequencing datasets from NCBI using the SRA Toolkit.
 
-The script will be saved as `download_sra.slurm` and will be designed to run on PSC Bridges2.
+We will create a SLURM script named `download_sra.slurm` to download the sequencing runs onto PSC Bridges2.
 
-The script will read the SRR accession numbers from `accession_file.txt`, download the sequencing runs, and convert them into FASTQ files for further analysis.
+### Preparing the Download Script
+
+The script will:
+
+1. Read the nine SRR accession numbers from `accession_file.txt`.
+2. Use `prefetch` to retrieve each sequencing run from NCBI.
+3. Use `fasterq-dump` to convert the downloaded data into FASTQ files.
+4. Compress the FASTQ files to reduce storage requirements.
+5. Save the sequencing files in the `fastq_data` directory.
+
+The script is available here:
+
+[Download SRA Script](download_sra.slurm)
+
+### Running the Script
+
+Once access to PSC Bridges2 is available, the script can be submitted using:
+
+```bash
+sbatch download_sra.slurm
+```
+
+To check the status of the job:
+
+```bash
+squeue -u $USER
+```
+
+### Expected Output
+
+The script is intended to create two directories:
+
+- `sra_data/` — Original downloaded SRA data.
+- `fastq_data/` — Converted and compressed FASTQ files.
+
+The FASTQ files will be used in the next steps to map the sequencing reads to the human reference genome.
+
+**Note:** This script has been prepared for the workflow but has not yet been executed or validated on PSC Bridges2.
 
 ---
 
