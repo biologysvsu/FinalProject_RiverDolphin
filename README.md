@@ -226,12 +226,12 @@ The completed index will be used in Step 5.
 
 ## Step 5: Map the Nine Sequencing Datasets to the Human Reference Genome
 
-Once the FASTQ files and Bowtie2 index are available, we will map the sequencing reads to the human reference genome.
+Once the FASTQ files and Bowtie2 index are available, we will map the sequencing reads from all nine datasets to the human reference genome.
 
 We will use three programs:
 
 - Bowtie2 to align the sequencing reads
-- SAMtools to sort and index the alignment files
+- SAMtools to sort, index, and check the alignment files
 - BCFtools to identify genetic variants and create VCF files
 
 ### Required Input Files
@@ -240,7 +240,7 @@ Before starting, we will need:
 
 1. The nine sequencing datasets in FASTQ format
 2. The GRCh38.p14 human reference genome FASTA file
-3. The Bowtie2 index files
+3. The Bowtie2 index files created in Step 4
 4. The accession list in `accession_file.txt`
 
 ### SNP Calling Script
@@ -249,9 +249,24 @@ We created a SLURM script named `snpcall.slurm` based on the Bowtie2 and SNP-cal
 
 The script processes each SRR accession separately.
 
+We will also include read-group information in the Bowtie2 commands so that each sample can be identified by its SRR accession number.
+
+For example:
+
+```bash
+--rg-id "$accession" \
+--rg "SM:$accession" \
+```
+
+This information is important when combining the nine BAM files for joint variant calling in Step 6.
+
+The script is available here:
+
 [snpcall.slurm](snpcall.slurm)
 
 ### Submit the SNP Calling Job
+
+Once the script is ready, submit it using:
 
 ```bash
 sbatch snpcall.slurm
@@ -263,6 +278,22 @@ Check the job status:
 squeue -u $USER
 ```
 
+### Check the Alignment Quality
+
+After the sequencing reads have been aligned, we will use SAMtools to check how well they mapped to the human reference genome.
+
+For example, we can check the first Amazon river dolphin dataset using:
+
+```bash
+samtools flagstat results/SRR35768626_sorted.bam
+```
+
+This command provides information about the total number of reads and how many successfully mapped to the reference genome.
+
+We will repeat this check for all nine datasets.
+
+The mapping results will help us determine whether the data are suitable for further variant analysis.
+
 ### Expected Output
 
 For each sequencing dataset, we expect to generate:
@@ -271,8 +302,9 @@ For each sequencing dataset, we expect to generate:
 - A BAM index file
 - A compressed VCF file containing called variants
 - A VCF index file
+- Alignment statistics showing how many reads mapped
 
-For example, the first Amazon river dolphin sequencing run should generate:
+For example, the first Amazon river dolphin dataset should generate:
 
 ```text
 results/SRR35768626_sorted.bam
@@ -281,17 +313,21 @@ results/SRR35768626.vcf.gz
 results/SRR35768626.vcf.gz.tbi
 ```
 
-This process will be repeated for all nine datasets.
+The same process will be repeated for all nine datasets.
 
 ### Important Considerations
 
-The sequencing layout must be confirmed before running the mapping script.
+Before running the script, we will confirm whether each sequencing dataset contains paired-end or single-end reads.
 
-Mapping Amazon river dolphin and arapaima reads to a human reference genome may produce low alignment rates, especially for arapaima.
+Mapping Amazon river dolphin and arapaima sequencing reads to the human reference genome may produce low alignment rates, especially for arapaima.
 
-This can affect variant detection and make comparisons between species difficult.
+This could affect variant calling and make comparisons between species difficult.
+
+We will review the alignment statistics before continuing to Step 6.
 
 The mapping and SNP-calling process may take many hours and require substantial computing resources.
+
+**Note:** This workflow has not yet been executed. The commands and computing requirements must be verified on PSC Bridges2 before running.
 
 ## Step 6: Analyze the VCF Files
 
