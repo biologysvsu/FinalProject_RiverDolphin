@@ -1,42 +1,40 @@
 
-# Comparative Genomics of Amazon River Dolphins, Arapaima, and Humans
+# Comparative Genomics of Amazon River Dolphin, Arapaima, and Human
 
-## Objective
+## Project Overview
 
-The objective of this project is to compare whole-genome sequencing data from three different species: Amazon river dolphins (*Inia geoffrensis*), arapaima fish (*Arapaima gigas*), and humans (*Homo sapiens*). We will use nine sequencing datasets, with three from each species, to investigate their genetic similarities, differences, and evolutionary relationships.
+For our BIOL 443 final project, we will compare whole-genome sequencing data from three different species: Amazon river dolphin (*Inia geoffrensis*), arapaima (*Arapaima gigas*), and human (*Homo sapiens*).
 
-This workflow will explain how to download sequencing data from NCBI, map the sequences to the human reference genome using Bowtie2, identify genetic variants, and create a PCA plot to visualize genetic differences among the samples.
+We selected three SRA sequencing runs from each species, giving us nine datasets total.
+
+Our goal is to use bioinformatics tools to download sequencing reads, align them to the human reference genome, identify genetic variants, and explore the results using principal component analysis (PCA).
+
+This repository contains the commands and scripts for completing the project using PSC Bridges2.
 
 ## Software and Resources
 
-The following programs and resources will be used:
+The programs used in this workflow include:
 
-1. **NCBI SRA:** Source of the whole-genome sequencing datasets.
-2. **SRA Toolkit:** Used to download sequencing reads from NCBI.
-3. **PSC Bridges2:** High-performance computing system used to run the analysis.
-4. **Bowtie2:** Used to align sequencing reads to the human reference genome.
-5. **SAMtools:** Used to process and organize alignment files.
-6. **BCFtools:** Used to identify and analyze genetic variants.
-7. **PLINK 2:** Used to perform principal component analysis (PCA).
-8. **GitHub:** Used to organize the workflow and scripts.
+- NCBI SRA Toolkit — download sequencing data
+- Bowtie2 — align sequencing reads to a reference genome
+- SAMtools — sort and index alignment files
+- BCFtools — identify and analyze genetic variants
+- PLINK 2 — prepare genetic data for PCA
+- PSC Bridges2 — high-performance computing system
+- GitHub — store scripts and document the workflow
 
-### Useful Links
+Useful resources:
 
-- [NCBI SRA](https://www.ncbi.nlm.nih.gov/sra)
-- [SRA Toolkit](https://github.com/ncbi/sra-tools)
-- [PSC Bridges2](https://www.psc.edu/resources/bridges-2/)
+- [NCBI Sequence Read Archive](https://www.ncbi.nlm.nih.gov/sra)
+- [Human Reference Genome GRCh38](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001405.40/)
 - [Bowtie2 Manual](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml)
-- [SAMtools](http://www.htslib.org/)
+- [SAMtools](https://www.htslib.org/)
 - [BCFtools](https://samtools.github.io/bcftools/)
-- [PLINK 2](https://www.cog-genomics.org/plink/2.0)
-
----
+- [PLINK 2](https://www.cog-genomics.org/plink/2.0/)
 
 ## Step 1: List of SRA Accessions
 
-For this project, we selected nine sequencing datasets from the NCBI Sequence Read Archive (SRA). Three datasets were selected for each species.
-
-The SRX accession numbers identify the sequencing experiments, while the SRR accession numbers identify the sequencing runs that will be used to download the data.
+We selected three whole-genome sequencing runs from each species.
 
 ### Amazon River Dolphin (*Inia geoffrensis*)
 
@@ -62,59 +60,57 @@ The SRX accession numbers identify the sequencing experiments, while the SRR acc
 | SRX33863758 | SRR39117444 |
 | SRX33863757 | SRR39117443 |
 
-### Creating the Accession File
+We created a file named `accession_file.txt` containing the nine SRR accession numbers. This file will be used by our download and mapping scripts.
 
-The nine SRR accession numbers will be saved in a text file named `accession_file.txt`.
-
-The file will contain the following:
-
-```text
-SRR35768626
-SRR35768627
-SRR35768629
-SRR14593737
-SRR23574201
-SRR23574205
-SRR39117445
-SRR39117444
-SRR39117443
-```
-
-This file will be used in the next step to download the sequencing data.
-
-Before downloading, the NCBI metadata should be checked to confirm that each run contains suitable whole-genome DNA sequencing data and represents the intended sample.
-
----
+Before running the analysis, we will confirm that these datasets contain whole-genome sequencing reads and check their sequencing layouts.
 
 ## Step 2: Download SRA Sequences
 
-The next step is to download the nine whole-genome sequencing datasets from NCBI using the SRA Toolkit.
+The next step is to download the nine sequencing datasets from NCBI using the SRA Toolkit.
 
-We will create a SLURM script named `download_sra.slurm` to download the sequencing runs onto PSC Bridges2.
+We will use PSC Bridges2 to download the data and convert the SRA files into FASTQ format.
 
-### Preparing the Download Script
+### Log Into PSC Bridges2
+
+Open a terminal, Git Bash, or PowerShell and connect to PSC:
+
+```bash
+ssh your-psc-username@bridges2.psc.edu
+```
+
+Navigate to the project directory:
+
+```bash
+cd /ocean/projects/bio260081p/your-username
+```
+
+Replace `your-username` with your actual PSC username.
+
+### Download Script
+
+We created a SLURM script named `download_sra.slurm`.
 
 The script will:
 
-1. Read the nine SRR accession numbers from `accession_file.txt`.
-2. Use `prefetch` to retrieve each sequencing run from NCBI.
-3. Use `fasterq-dump` to convert the downloaded data into FASTQ files.
-4. Compress the FASTQ files to reduce storage requirements.
-5. Save the sequencing files in the `fastq_data` directory.
+1. Read the nine SRR accessions from `accession_file.txt`.
+2. Download the sequencing runs using `prefetch`.
+3. Convert SRA files into FASTQ files using `fasterq-dump`.
+4. Compress the FASTQ files to save storage space.
+5. Save the files in a directory named `fastq_data`.
 
-The script is available here:
+The download script is available here:
 
-[Download SRA Script](download_sra.slurm)
+[download_sra.slurm](download_sra.slurm)
 
-### Running the Script
+### Submit the Download Job
 
-Once access to PSC Bridges2 is available, the script can be submitted using:
+Once PSC access is available, submit the script:
 
 ```bash
 sbatch download_sra.slurm
 ```
 
-To check the status of the job:
+Check the job status:
 
 ```bash
 squeue -u $USER
@@ -122,144 +118,208 @@ squeue -u $USER
 
 ### Expected Output
 
-The script is intended to create two directories:
+The download process should create:
 
-- `sra_data/` — Original downloaded SRA data.
-- `fastq_data/` — Converted and compressed FASTQ files.
+- `sra_data/` — downloaded SRA files
+- `fastq_data/` — sequencing reads in compressed FASTQ format
 
-The FASTQ files will be used in the next steps to map the sequencing reads to the human reference genome.
-
-**Note:** This script has been prepared for the workflow but has not yet been executed or validated on PSC Bridges2.
-
----
+These FASTQ files will be used for alignment in Step 5.
 
 ## Step 3: Obtain the Human Reference Genome
 
-The next step is to obtain the human reference genome, which will be used to align the sequencing reads from all nine datasets.
-
-For this project, we will use the human reference genome GRCh38 (*Homo sapiens*).
+We will use the human reference genome GRCh38.p14 to align all nine sequencing datasets.
 
 ### Reference Genome Information
 
-- **Organism:** Homo sapiens
-- **Reference genome:** GRCh38
-- **NCBI Assembly Accession:** GCF_000001405.40
-- **File format:** FASTA
-- **Source:** NCBI Genome Database
+- Organism: *Homo sapiens*
+- Reference assembly: GRCh38.p14
+- NCBI accession: GCF_000001405.40
+- File format: FASTA
+- Reference filename: `GCF_000001405.40_GRCh38.p14_genomic.fna`
 
-### Downloading the Reference Genome
+The reference genome is available from NCBI:
 
-The human reference genome can be found using the following link:
+[NCBI Human Reference Genome](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001405.40/)
 
-[NCBI Human Reference Genome GRCh38](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001405.40/)
+### Download the Reference Genome
 
-Once access to PSC Bridges2 is available, we will use NCBI Datasets to download the reference genome.
-
-First, create a directory to store the reference genome:
+First, create a directory for the reference genome:
 
 ```bash
 mkdir -p reference
 ```
 
-Next, download the human reference genome using NCBI Datasets:
+Download the genomic FASTA file:
 
 ```bash
-datasets download genome accession GCF_000001405.40 \
-    --include genome \
-    --filename reference/human_GRCh38.zip
+wget -P reference \
+https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.fna.gz
 ```
 
-After downloading, extract the genome files:
+Uncompress the downloaded file:
 
 ```bash
-unzip reference/human_GRCh38.zip -d reference/human_GRCh38
+gunzip reference/GCF_000001405.40_GRCh38.p14_genomic.fna.gz
 ```
-
-The extracted files will contain the reference genome in FASTA format.
-
-### Preparing the Reference Genome
-
-The FASTA file will be used in the next step to build the Bowtie2 database.
-
-To locate the FASTA file after extraction, use:
-
-```bash
-find reference/human_GRCh38 -name "*.fna"
-```
-
-The file path returned by this command will be used in Step 4.
 
 ### Expected Output
 
-The expected output is a human reference genome FASTA file stored in the `reference` directory.
+The reference genome will be saved as:
 
-This file will serve as the reference for mapping sequencing reads from the nine selected SRA datasets.
+`reference/GCF_000001405.40_GRCh38.p14_genomic.fna`
 
-**Note:** The reference genome has not yet been downloaded. These commands are included as part of the proposed workflow.
-
----
+This FASTA file will be used to build the Bowtie2 database.
 
 ## Step 4: Build the Bowtie2 Database
 
-After obtaining the human reference genome, we will use Bowtie2 to build an index of the reference sequence.
+After downloading the human reference genome, we will build a Bowtie2 index.
 
-The Bowtie2 database allows sequencing reads to be aligned to the human reference genome.
+Bowtie2 uses this index to align sequencing reads to the reference genome.
 
-The command will follow this format:
+### Load Bowtie2
+
+On PSC Bridges2, the software can be loaded using:
 
 ```bash
-bowtie2-build human_reference.fna human_index
+module load bowtie2/2.4.4
 ```
 
-The FASTA filename will be replaced with the actual downloaded reference genome filename.
+### Build the Bowtie2 Index
 
----
+We created a SLURM script named `index.slurm` to build the index.
+
+The script is available here:
+
+[index.slurm](index.slurm)
+
+The main indexing command is:
+
+```bash
+bowtie2-build --threads 16 \
+reference/GCF_000001405.40_GRCh38.p14_genomic.fna \
+bowtie2_index/human_genome_reference
+```
+
+The first path identifies the human reference genome.
+
+The second path specifies the location and prefix of the Bowtie2 index files.
+
+### Submit the Indexing Job
+
+```bash
+sbatch index.slurm
+```
+
+Check the job status:
+
+```bash
+squeue -u $USER
+```
+
+### Expected Output
+
+Bowtie2 should create six index files in the `bowtie2_index` directory.
+
+These files will have `.bt2` or `.bt2l` extensions, depending on the index format.
+
+The completed index will be used in Step 5.
 
 ## Step 5: Map the Nine Sequencing Datasets to the Human Reference Genome
 
-Bowtie2 will be used to align the sequencing reads from all nine datasets to the human reference genome.
+Once the FASTQ files and Bowtie2 index are available, we will map the sequencing reads to the human reference genome.
 
-The analysis will include three Amazon river dolphin datasets, three arapaima datasets, and three human datasets.
+We will use three programs:
 
-Because whole-genome sequencing datasets can be large, the mapping process may take several hours.
+- Bowtie2 to align the sequencing reads
+- SAMtools to sort and index the alignment files
+- BCFtools to identify genetic variants and create VCF files
 
-The Bowtie2 alignment output will be processed using SAMtools to create sorted and indexed BAM files.
+### Required Input Files
 
-A separate variant-calling step using BCFtools will then be used to generate VCF files containing genetic variants.
+Before starting, we will need:
 
----
+1. The nine sequencing datasets in FASTQ format
+2. The GRCh38.p14 human reference genome FASTA file
+3. The Bowtie2 index files
+4. The accession list in `accession_file.txt`
+
+### SNP Calling Script
+
+We created a SLURM script named `snpcall.slurm` based on the Bowtie2 and SNP-calling tutorial used in class.
+
+The script processes each SRR accession separately.
+
+[snpcall.slurm](snpcall.slurm)
+
+### Submit the SNP Calling Job
+
+```bash
+sbatch snpcall.slurm
+```
+
+Check the job status:
+
+```bash
+squeue -u $USER
+```
+
+### Expected Output
+
+For each sequencing dataset, we expect to generate:
+
+- A sorted BAM file containing aligned reads
+- A BAM index file
+- A compressed VCF file containing called variants
+- A VCF index file
+
+For example, the first Amazon river dolphin sequencing run should generate:
+
+```text
+results/SRR35768626_sorted.bam
+results/SRR35768626_sorted.bam.bai
+results/SRR35768626.vcf.gz
+results/SRR35768626.vcf.gz.tbi
+```
+
+This process will be repeated for all nine datasets.
+
+### Important Considerations
+
+The sequencing layout must be confirmed before running the mapping script.
+
+Mapping Amazon river dolphin and arapaima reads to a human reference genome may produce low alignment rates, especially for arapaima.
+
+This can affect variant detection and make comparisons between species difficult.
+
+The mapping and SNP-calling process may take many hours and require substantial computing resources.
 
 ## Step 6: Analyze the VCF Files
 
-The VCF files will be examined to identify genetic variation among the nine samples.
+After generating the VCF files, we will examine the genetic variants identified in the sequencing datasets.
 
-The analysis will include:
+We plan to use BCFtools to review variant counts, quality, and filtering.
 
-1. Checking the quality of the variant calls.
-2. Filtering low-quality variants.
-3. Identifying genomic positions that can be reliably compared across samples.
-4. Preparing a combined dataset for PCA analysis.
+For PCA, the samples will need to be represented at comparable genomic positions in a shared genotype dataset. Separately called variant-only VCF files cannot simply be combined without accounting for missing and reference genotypes.
 
----
+We will document the analysis commands and results in this section after developing the next part of the workflow.
 
 ## Step 7: Create a PCA Plot
 
-Principal component analysis (PCA) will be used to visualize patterns of genetic variation among the nine sequencing datasets.
+The final step will be to create a principal component analysis (PCA) plot using the genetic data.
 
-We will use PLINK 2 to calculate the principal components and create a PCA plot.
+We plan to use PLINK 2 to calculate principal components and visualize the samples.
 
-The plot will display the samples according to their genetic variation, with each species labeled separately.
+The PCA plot will help us explore patterns in the genetic data.
 
-We will examine whether the river dolphin and human samples show greater genetic similarity compared to the arapaima samples.
+However, because these species are very different and all reads are being mapped to a human reference genome, the PCA results may be strongly affected by reference bias and missing data. The plot should not be interpreted as a reliable evolutionary tree.
 
-Because arapaima is evolutionarily distant from humans, mapping its reads to the human reference genome may produce limited or biased results. Mapping quality and the number of reliable shared variants will need to be evaluated before interpreting the PCA.
+We will add the PCA commands and results after developing this step.
 
----
+## Project Status
 
-## Expected Results
+This repository currently documents the proposed bioinformatics workflow.
 
-We expect river dolphins and humans to share a more recent common ancestor with each other than either does with arapaima fish because both river dolphins and humans are mammals.
+The scripts have been prepared but have not yet been executed on PSC Bridges2.
 
-The PCA will be used to explore patterns of genetic variation, although it may not reliably reconstruct evolutionary relationships across these distantly related species.
+The software environment, dataset metadata, resource requirements, and input file layouts must be verified before running the analysis.
 
-This workflow is a proposed analysis plan. The sequencing data have not yet been downloaded or analyzed, and no results have been generated.
