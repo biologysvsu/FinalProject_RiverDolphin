@@ -295,13 +295,111 @@ The mapping and SNP-calling process may take many hours and require substantial 
 
 ## Step 6: Analyze the VCF Files
 
-After generating the VCF files, we will examine the genetic variants identified in the sequencing datasets.
+After mapping the nine sequencing datasets to the human reference genome, the next step is to analyze the genetic variants.
 
-We plan to use BCFtools to review variant counts, quality, and filtering.
+We will use BCFtools to examine the VCF files and prepare the data for PCA.
 
-For PCA, the samples will need to be represented at comparable genomic positions in a shared genotype dataset. Separately called variant-only VCF files cannot simply be combined without accounting for missing and reference genotypes.
+### Load BCFtools
 
-We will document the analysis commands and results in this section after developing the next part of the workflow.
+First, log into PSC Bridges2 and navigate to the project directory.
+
+```bash
+ssh your-psc-username@bridges2.psc.edu
+```
+
+```bash
+cd /ocean/projects/bio260081p/your-username
+```
+
+Load BCFtools:
+
+```bash
+module load bcftools
+```
+
+### Check the VCF Files
+
+The VCF files from Step 5 should be located in the `results` directory.
+
+To see the files, run:
+
+```bash
+ls results/*.vcf.gz
+```
+
+To view the variants in the first Amazon river dolphin dataset:
+
+```bash
+bcftools view -H results/SRR35768626.vcf.gz | head
+```
+
+### Calculate Variant Statistics
+
+BCFtools can calculate statistics about the variants identified in each dataset.
+
+For example:
+
+```bash
+bcftools stats results/SRR35768626.vcf.gz
+```
+
+We will repeat this analysis for the other eight datasets.
+
+These statistics can help us examine the number and types of variants identified.
+
+### Prepare a Shared Genotype Dataset
+
+For PCA, we need genotype information at comparable genomic positions across all nine samples.
+
+The individual VCF files generated in Step 5 contain variant calls for each sample separately. Simply combining these variant-only files may not correctly represent positions where other samples match the reference genome.
+
+Instead, we will use the sorted BAM files from Step 5 to perform joint variant calling across all nine samples.
+
+We will create a script named `analyze_vcf.slurm` that:
+
+1. Reads the nine sorted BAM files.
+2. Performs joint variant calling using BCFtools.
+3. Produces a combined VCF file.
+4. Filters for biallelic SNPs.
+5. Creates summary statistics for the filtered variants.
+
+The script is available here:
+
+[analyze_vcf.slurm](analyze_vcf.slurm)
+
+### Submit the Analysis Job
+
+```bash
+sbatch analyze_vcf.slurm
+```
+
+Check the job status:
+
+```bash
+squeue -u $USER
+```
+
+### Expected Output
+
+The analysis should generate:
+
+- `combined_variants.vcf.gz` — jointly called variants
+- `filtered_snps.vcf.gz` — filtered biallelic SNPs
+- `variant_stats.txt` — summary statistics
+
+These files will be stored in the `analysis` directory.
+
+### Important Considerations
+
+We will need to check the alignment rates and missing genotype data before interpreting the results.
+
+Because the three species are very different, some datasets may have very few reads that align reliably to the human reference genome.
+
+The variant calls may also be affected by differences in sequencing depth, mapping quality, and reference bias.
+
+The filtered SNP dataset will be evaluated before proceeding with PCA.
+
+**Note:** This analysis has not yet been completed. The workflow is being prepared for future execution.
 
 ## Step 7: Create a PCA Plot
 
