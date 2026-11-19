@@ -12,25 +12,32 @@
 set -euo pipefail
 
 # BIOL 443 Final Project
-# Build Bowtie2 index for human reference genome
+# Build Bowtie2 index for the human reference genome
 
-# Load Bowtie2
 module load bowtie2/2.4.4
 
-# Define working directory
-
-WORKDIR="/ocean/projects/bio260081p/your-username/FinalProject_RiverDolphin"
+WORKDIR="${SLURM_SUBMIT_DIR:-$PWD}"
 cd "$WORKDIR"
 
-# Define human reference genome
 REFERENCE="$WORKDIR/reference/GCF_000001405.40_GRCh38.p14_genomic.fna"
 
-# Create directory for index files
-mkdir -p bowtie2_index
+INDEX_DIR="$WORKDIR/bowtie2_index"
+INDEX_PREFIX="$INDEX_DIR/human_genome_reference"
 
-# Build Bowtie2 index
-bowtie2-build --threads 16 \
+# Check that the reference genome exists
+if [[ ! -s "$REFERENCE" ]]; then
+    echo "ERROR: Human reference genome not found."
+    echo "$REFERENCE"
+    exit 1
+fi
+
+mkdir -p "$INDEX_DIR"
+
+echo "Building Bowtie2 index..."
+
+bowtie2-build \
+    --threads 16 \
     "$REFERENCE" \
-    "$WORKDIR/bowtie2_index/human_genome_reference"
+    "$INDEX_PREFIX"
 
 echo "Bowtie2 index completed."
