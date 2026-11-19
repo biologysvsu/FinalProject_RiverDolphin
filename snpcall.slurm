@@ -12,54 +12,66 @@
 set -euo pipefail
 
 # BIOL 443 Final Project
-# Map 9 sequencing datasets to the human genome
-# Generate sorted BAM files, VCF files, and alignment statistics
+# Map nine datasets to the human reference genome
+# Generate BAM files, alignment statistics, and VCF files
 
-# Load required software
 module load bowtie2/2.4.4
 module load samtools
 module load bcftools
 
-# Define working directory
-
-WORKDIR="/ocean/projects/bio260081p/your-username/FinalProject_RiverDolphin"
+WORKDIR="${SLURM_SUBMIT_DIR:-$PWD}"
 cd "$WORKDIR"
 
-# Define reference genome
 REFERENCE="$WORKDIR/reference/GCF_000001405.40_GRCh38.p14_genomic.fna"
-
-# Define Bowtie2 index
 BOWTIEREF="$WORKDIR/bowtie2_index/human_genome_reference"
+ACCESSIONS="$WORKDIR/accession_file.txt"
 
-# Create output directory
 mkdir -p results
 
-# Index the reference FASTA if needed
-if [[ ! -f "${REFERENCE}.fai" ]]; then
+# Check required inputs
+if [[ ! -s "$REFERENCE" || ! -s "$ACCESSIONS" ]]; then
+    echo "ERROR: Reference genome or accession list is missing."
+    exit 1
+fi
+
+if ! bowtie2-inspect -n "$BOWTIEREF" > /dev/null; then
+    echo "ERROR: Bowtie2 index is missing or unreadable."
+    exit 1
+fi
+
+# Index the reference genome if needed
+if [[ ! -s "${REFERENCE}.fai" ]]; then
     samtools faidx "$REFERENCE"
 fi
 
-# Process each SRA accession
-while read -r accession; do
+# Process each accession
+while IFS= read -r accession || [[ -n "$accession" ]]; do
 
+    accession="${accession//$'\r'/}"
     [[ -z "$accession" ]] && continue
 
     echo "Processing $accession"
 
-    # Define input FASTQ files
     READS_1="$WORKDIR/fastq_data/${accession}_1.fastq.gz"
     READS_2="$WORKDIR/fastq_data/${accession}_2.fastq.gz"
+    READS_3="$WORKDIR/fastq_data/${accession}_3.fastq.gz"
     READS_SINGLE="$WORKDIR/fastq_data/${accession}.fastq.gz"
 
-    # Define output files
     SORTED_BAM="$WORKDIR/results/${accession}_sorted.bam"
     VCF_OUTPUT="$WORKDIR/results/${accession}.vcf.gz"
     FLAGSTAT_OUTPUT="$WORKDIR/results/${accession}_flagstat.txt"
+    ALIGN_LOG="$WORKDIR/results/${accession}_bowtie2.log"
 
-    # Align paired-end sequencing reads
-    if [[ -f "$READS_1" && -f "$READS_2" ]]; then
+    # Paired-end sequencing
+    if [[ -s "$READS_1" && -s "$READS_2" ]]; then
 
-        echo "Running paired-end Bowtie2 alignment"
+        echo "Running paired-end alignment"
+
+        if [[ -s "$READS_3" ]]; then
+            echo "WARNING: Additional unpaired reads found:"
+            echo "$READS_3"
+            echo "These reads are not included in this alignment."
+        fi
 
         bowtie2 --very-fast -p 8 \
             -x "$BOWTIEREF" \
@@ -67,70 +79,77 @@ while read -r accession; do
             --rg "SM:$accession" \
             -1 "$READS_1" \
             -2 "$READS_2" \
+            2> "$ALIGN_LOG" \
             | samtools sort -@ 4 -m 2G \
                 -o "$SORTED_BAM" -
 
-    # Align single-end sequencing reads
-    elif [[ -f "$READS_1" && ! -f "$READS_2" ]]; then
+    # Single-end reads with _1 suffix
+    elif [[ -s "$READS_1" && ! -e "$READS_2" ]]; then
 
-        echo "Running single-end Bowtie2 alignment"
+        echo "Running single-end alignment"
 
         bowtie2 --very-fast -p 8 \
             -x "$BOWTIEREF" \
             --rg-id "$accession" \
             --rg "SM:$accession" \
             -U "$READS_1" \
+            2> "$ALIGN_LOG" \
             | samtools sort -@ 4 -m 2G \
                 -o "$SORTED_BAM" -
 
-    elif [[ -f "$READS_SINGLE" ]]; then
+    # Single-end reads without suffix
+    elif [[ -s "$READS_SINGLE" ]]; then
 
-        echo "Running single-end Bowtie2 alignment"
+        echo "Running single-end alignment"
 
         bowtie2 --very-fast -p 8 \
             -x "$BOWTIEREF" \
             --rg-id "$accession" \
             --rg "SM:$accession" \
             -U "$READS_SINGLE" \
+            2> "$ALIGN_LOG" \
             | samtools sort -@ 4 -m 2G \
                 -o "$SORTED_BAM" -
 
     else
 
-        echo "Missing FASTQ files for $accession" >&2
+        echo "ERROR: Missing or incomplete FASTQ files for $accession"
         exit 1
 
     fi
 
-    # Index sorted BAM file
-    echo "Indexing BAM file"
-
+    # Index BAM file
     samtools index "$SORTED_BAM"
 
-    # Calculate and save alignment statistics
-    echo "Calculating alignment statistics"
-
+    # Save alignment statistics
     samtools flagstat "$SORTED_BAM" \
         > "$FLAGSTAT_OUTPUT"
 
-    # Call genetic variants
-    echo "Calling variants with BCFtools"
+    # Verify sample identification
+    if ! samtools view -H "$SORTED_BAM" \
+        | grep -Fq "SM:$accession"; then
 
-    bcftools mpileup -Ou \
+        echo "ERROR: Sample identification missing for $accession"
+        exit 1
+    fi
+
+    # Call variants for this sample
+    bcftools mpileup \
+        -Ou \
         -f "$REFERENCE" \
         "$SORTED_BAM" \
-        | bcftools call -mv -Oz \
+        | bcftools call \
+            -mv \
+            -Oz \
             -o "$VCF_OUTPUT"
 
-    # Index compressed VCF file
-    echo "Indexing VCF file"
-
+    # Index VCF
     bcftools index -t "$VCF_OUTPUT"
 
     echo "Finished $accession"
 
-done < accession_file.txt
+done < "$ACCESSIONS"
 
-echo "All nine datasets processed."
+echo "Mapping and individual SNP calling completed."
+echo "Review alignment statistics before joint variant calling."
 
-echo "All nine datasets processed."
