@@ -11,6 +11,19 @@ Our goal is to use bioinformatics tools to download sequencing reads, align them
 
 This repository contains the commands and scripts for completing the project using PSC Bridges2.
 
+## Objectives
+
+Students will:
+
+1. Identify and obtain whole-genome sequencing datasets from NCBI SRA.
+2. Download and prepare sequencing reads using the SRA Toolkit.
+3. Obtain the human reference genome (GRCh38.p14).
+4. Build a Bowtie2 index for the reference genome.
+5. Align sequencing reads using Bowtie2 and process alignment files using SAMtools.
+6. Identify and analyze genetic variants using BCFtools.
+7. Perform principal component analysis (PCA) using PLINK 2.
+8. Interpret genetic variation and discuss limitations when comparing different species.
+
 ## Software and Resources
 
 The programs used in this workflow include:
@@ -31,6 +44,40 @@ Useful resources:
 - [SAMtools](https://www.htslib.org/)
 - [BCFtools](https://samtools.github.io/bcftools/)
 - [PLINK 2](https://www.cog-genomics.org/plink/2.0/)
+
+## GitHub Setup
+
+Before beginning the analysis, students should clone the GitHub repository to access the workflow instructions and SLURM scripts.
+
+### Clone the Repository
+
+Log into PSC Bridges2:
+
+```bash
+ssh your-psc-username@bridges2.psc.edu
+```
+
+Navigate to your project directory:
+
+```bash
+cd /ocean/projects/bio260081p/your-username
+```
+
+Clone the repository:
+
+```bash
+git clone https://github.com/biologysvsu/FinalProject_RiverDolphin.git
+```
+
+Enter the repository:
+
+```bash
+cd FinalProject_RiverDolphin
+```
+
+The repository contains the workflow instructions, accession list, and SLURM scripts needed for the project.
+
+Before running the scripts, confirm that the working directory paths match the location of the cloned repository.
 
 ## Step 1: List of SRA Accessions
 
@@ -506,19 +553,37 @@ We will create a scatterplot with:
 
 We will label the samples according to their species.
 
-### Interpretation
+## Interpretation of Results
 
-If enough comparable genetic information is available, PCA may help identify patterns among the samples.
+After completing the analysis, we will examine the variant statistics and PCA results to identify patterns in the sequencing data.
 
-However, mapping three distantly related species to the human reference genome introduces major limitations.
+### 1. Genetic Variation
 
-Differences in alignment success and missing data could create misleading separation between samples.
+- How many variants were identified in each dataset?
+- Were there differences in the number of variants between species?
+- Could differences in sequencing depth or alignment quality affect the results?
 
-PCA does not directly measure evolutionary relationships, and it is not a phylogenetic tree.
+### 2. PCA Results
 
-We will only interpret the PCA results if the quality of the data supports a meaningful comparison.
+- Do the samples appear to cluster according to species?
+- Are samples from the same species positioned close together?
+- Are any samples noticeably different from the others?
 
-**Note:** No PCA results have been generated yet. This is the proposed workflow.
+### 3. Alignment Quality
+
+- Which species had the highest percentage of reads mapping to the human reference genome?
+- Did any datasets have unusually low alignment rates?
+- How could low alignment rates affect variant calling and PCA?
+
+### 4. Limitations
+
+- How does using the human reference genome affect comparisons between the three species?
+- Could missing data or differences in sequencing quality influence the results?
+- What additional analysis would be needed to investigate evolutionary relationships?
+
+We will use these questions to evaluate our results and determine whether the genetic comparisons are meaningful.
+
+**Note:** The analysis has not yet been performed, so no conclusions can be made at this time.
 
 ## Project Status
 
