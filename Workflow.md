@@ -403,15 +403,86 @@ The filtered SNP dataset will be evaluated before proceeding with PCA.
 
 ## Step 7: Create a PCA Plot
 
-The final step will be to create a principal component analysis (PCA) plot using the genetic data.
+The final step of our project is to use principal component analysis (PCA) to explore patterns in the genetic data.
 
-We plan to use PLINK 2 to calculate principal components and visualize the samples.
+PCA is a statistical method that reduces a large amount of genetic information into a smaller number of components.
 
-The PCA plot will help us explore patterns in the genetic data.
+We plan to use PLINK 2 to calculate principal components from the filtered SNP data.
 
-However, because these species are very different and all reads are being mapped to a human reference genome, the PCA results may be strongly affected by reference bias and missing data. The plot should not be interpreted as a reliable evolutionary tree.
+### Load PLINK 2
 
-We will add the PCA commands and results after developing this step.
+First, log into PSC Bridges2 and navigate to the project directory.
+
+```bash
+cd /ocean/projects/bio260081p/your-username
+```
+
+PLINK 2 must be installed or made available in the PSC environment.
+
+### Prepare the PCA Dataset
+
+We will use the filtered SNP file created in Step 6:
+
+`analysis/filtered_snps.vcf.gz`
+
+Before PCA, we will review the number of usable SNPs, missing genotype rates, and alignment quality.
+
+If the data are suitable, we will use PLINK 2 to convert the VCF into PLINK format and calculate principal components.
+
+### PCA Script
+
+We created a SLURM script named `pca.slurm`.
+
+The script will:
+
+1. Import the filtered SNP dataset into PLINK 2.
+2. Remove highly correlated SNPs using LD pruning.
+3. Calculate the first two principal components.
+4. Save the PCA results for visualization.
+
+The script is available here:
+
+[pca.slurm](pca.slurm)
+
+### Submit the PCA Job
+
+After confirming that the dataset is suitable for PCA:
+
+```bash
+sbatch pca.slurm
+```
+
+### Expected Output
+
+PLINK 2 should generate files containing the principal component scores and eigenvalues.
+
+The principal component scores can be used to create a scatterplot.
+
+### Create the PCA Plot
+
+The PCA results can be imported into Excel or another graphing program.
+
+We will create a scatterplot with:
+
+- X-axis: Principal Component 1 (PC1)
+- Y-axis: Principal Component 2 (PC2)
+- Each point representing one sequencing sample
+
+We will label the samples according to their species.
+
+### Interpretation
+
+If enough comparable genetic information is available, PCA may help identify patterns among the samples.
+
+However, mapping three distantly related species to the human reference genome introduces major limitations.
+
+Differences in alignment success and missing data could create misleading separation between samples.
+
+PCA does not directly measure evolutionary relationships, and it is not a phylogenetic tree.
+
+We will only interpret the PCA results if the quality of the data supports a meaningful comparison.
+
+**Note:** No PCA results have been generated yet. This is the proposed workflow.
 
 ## Project Status
 
