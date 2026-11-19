@@ -18,7 +18,8 @@ set -euo pipefail
 module load sra-toolkit
 
 # Define working directory
-WORKDIR="/ocean/projects/bio260081p/your-username"
+
+WORKDIR="/ocean/projects/bio260081p/your-username/FinalProject_RiverDolphin"
 cd "$WORKDIR"
 
 # Create directories
