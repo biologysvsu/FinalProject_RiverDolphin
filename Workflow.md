@@ -135,15 +135,67 @@ The FASTQ files will be used in the next steps to map the sequencing reads to th
 
 ## Step 3: Obtain the Human Reference Genome
 
-The human reference genome will be used as the reference for mapping the sequencing reads from all nine datasets.
+The next step is to obtain the human reference genome, which will be used to align the sequencing reads from all nine datasets.
 
-We will use the GRCh38 human reference genome, which can be obtained from NCBI.
+For this project, we will use the human reference genome GRCh38 (*Homo sapiens*).
 
-Reference genome link:
+### Reference Genome Information
 
-[NCBI Human Reference Genome](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001405.40/)
+- **Organism:** Homo sapiens
+- **Reference genome:** GRCh38
+- **NCBI Assembly Accession:** GCF_000001405.40
+- **File format:** FASTA
+- **Source:** NCBI Genome Database
 
-The reference genome will be downloaded in FASTA format and used to build the Bowtie2 database.
+### Downloading the Reference Genome
+
+The human reference genome can be found using the following link:
+
+[NCBI Human Reference Genome GRCh38](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001405.40/)
+
+Once access to PSC Bridges2 is available, we will use NCBI Datasets to download the reference genome.
+
+First, create a directory to store the reference genome:
+
+```bash
+mkdir -p reference
+```
+
+Next, download the human reference genome using NCBI Datasets:
+
+```bash
+datasets download genome accession GCF_000001405.40 \
+    --include genome \
+    --filename reference/human_GRCh38.zip
+```
+
+After downloading, extract the genome files:
+
+```bash
+unzip reference/human_GRCh38.zip -d reference/human_GRCh38
+```
+
+The extracted files will contain the reference genome in FASTA format.
+
+### Preparing the Reference Genome
+
+The FASTA file will be used in the next step to build the Bowtie2 database.
+
+To locate the FASTA file after extraction, use:
+
+```bash
+find reference/human_GRCh38 -name "*.fna"
+```
+
+The file path returned by this command will be used in Step 4.
+
+### Expected Output
+
+The expected output is a human reference genome FASTA file stored in the `reference` directory.
+
+This file will serve as the reference for mapping sequencing reads from the nine selected SRA datasets.
+
+**Note:** The reference genome has not yet been downloaded. These commands are included as part of the proposed workflow.
 
 ---
 
