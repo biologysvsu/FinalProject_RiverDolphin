@@ -13,7 +13,7 @@ set -euo pipefail
 
 # BIOL 443 Final Project
 # Map 9 sequencing datasets to the human genome
-# Generate sorted BAM and VCF files
+# Generate sorted BAM files, VCF files, and alignment statistics
 
 # Load required software
 module load bowtie2/2.4.4
@@ -53,6 +53,7 @@ while read -r accession; do
     # Define output files
     SORTED_BAM="$WORKDIR/results/${accession}_sorted.bam"
     VCF_OUTPUT="$WORKDIR/results/${accession}.vcf.gz"
+    FLAGSTAT_OUTPUT="$WORKDIR/results/${accession}_flagstat.txt"
 
     # Align paired-end sequencing reads
     if [[ -f "$READS_1" && -f "$READS_2" ]]; then
@@ -61,6 +62,8 @@ while read -r accession; do
 
         bowtie2 --very-fast -p 8 \
             -x "$BOWTIEREF" \
+            --rg-id "$accession" \
+            --rg "SM:$accession" \
             -1 "$READS_1" \
             -2 "$READS_2" \
             | samtools sort -@ 4 -m 2G \
@@ -73,6 +76,8 @@ while read -r accession; do
 
         bowtie2 --very-fast -p 8 \
             -x "$BOWTIEREF" \
+            --rg-id "$accession" \
+            --rg "SM:$accession" \
             -U "$READS_1" \
             | samtools sort -@ 4 -m 2G \
                 -o "$SORTED_BAM" -
@@ -83,6 +88,8 @@ while read -r accession; do
 
         bowtie2 --very-fast -p 8 \
             -x "$BOWTIEREF" \
+            --rg-id "$accession" \
+            --rg "SM:$accession" \
             -U "$READS_SINGLE" \
             | samtools sort -@ 4 -m 2G \
                 -o "$SORTED_BAM" -
@@ -98,6 +105,12 @@ while read -r accession; do
     echo "Indexing BAM file"
 
     samtools index "$SORTED_BAM"
+
+    # Calculate and save alignment statistics
+    echo "Calculating alignment statistics"
+
+    samtools flagstat "$SORTED_BAM" \
+        > "$FLAGSTAT_OUTPUT"
 
     # Call genetic variants
     echo "Calling variants with BCFtools"
@@ -116,5 +129,7 @@ while read -r accession; do
     echo "Finished $accession"
 
 done < accession_file.txt
+
+echo "All nine datasets processed."
 
 echo "All nine datasets processed."
