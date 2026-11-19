@@ -15,7 +15,8 @@ set -euo pipefail
 # Exploratory PCA using PLINK 2
 # Run only after checking data quality
 
-WORKDIR="/ocean/projects/bio260081p/your-username"
+
+WORKDIR="/ocean/projects/bio260081p/your-username/FinalProject_RiverDolphin"
 cd "$WORKDIR"
 
 # PLINK 2 must be available in PATH.
