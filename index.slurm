@@ -18,7 +18,8 @@ set -euo pipefail
 module load bowtie2/2.4.4
 
 # Define working directory
-WORKDIR="/ocean/projects/bio260081p/your-username"
+
+WORKDIR="/ocean/projects/bio260081p/your-username/FinalProject_RiverDolphin"
 cd "$WORKDIR"
 
 # Define human reference genome
